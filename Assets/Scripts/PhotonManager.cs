@@ -16,14 +16,23 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     // マスターサーバーへの接続が成功した時に呼ばれるコールバック
     public override void OnConnectedToMaster()
     {
-        // "Room"という名前のルームに参加する（ルームが存在しなければ作成して参加する）
-        PhotonNetwork.JoinOrCreateRoom("Room", new RoomOptions(), TypedLobby.Default);
+        PhotonNetwork.JoinRandomRoom();
+    }
+
+    //ゲームサーバーへの接続が失敗した時に呼ばれるコールバック
+    public override void OnJoinRandomFailed(short returnCode, string message)
+    {
+        var roomOptions = new RoomOptions();
+        roomOptions.MaxPlayers = 2;
+
+        PhotonNetwork.CreateRoom(null, roomOptions);
     }
 
     // ゲームサーバーへの接続が成功した時に呼ばれるコールバック
     public override void OnJoinedRoom()
     {
-
+        PhotonNetwork.Instantiate("GamePlayer", new Vector3(0, 0, 0), Quaternion.identity, 0);
+        Instantiate(Resources.Load("OthelloManager"));
     }
 
     // 他プレイヤーがルームへ参加した時に呼ばれるコールバック
@@ -35,6 +44,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     // 他プレイヤーがルームから退出した時に呼ばれるコールバック
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        
+        PhotonNetwork.LeaveRoom();
     }
 }
