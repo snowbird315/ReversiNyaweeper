@@ -17,26 +17,26 @@ public class Othello : MonoBehaviour
     private const byte WHITE = 2;
     private const byte BOMB = 3;
 
-    private Image image;
+    private SpriteRenderer sprite;
     private GameObject child;
-    private TextMeshProUGUI textMeshPro;
+    private TextMeshPro textMeshPro;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        image = this.GetComponent<Image>();
+        sprite = this.GetComponent<SpriteRenderer>();
         child = transform.GetChild(0).gameObject;
-        textMeshPro = child.GetComponent<TextMeshProUGUI>();
+        textMeshPro = child.GetComponent<TextMeshPro>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (status == NONE) image.color = Color.green;
-        else if (status == WHITE) image.color = Color.white;
-        else if (status == BLACK) image.color = Color.black;
-        else if (status == BOMB) image.color = Color.red;
+        if (status == NONE) sprite.color = Color.green;
+        else if (status == WHITE) sprite.color = Color.white;
+        else if (status == BLACK) sprite.color = Color.black;
+        else if (status == BOMB) sprite.color = Color.red;
 
         if (number != 0) textMeshPro.text = number.ToString();
         else textMeshPro.text = "";
