@@ -102,7 +102,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
                 pos.x = x + i;
                 pos.y = y + j;
                 if (!CheckPosition(pos.x, pos.y)) continue;
-                if (othelloBlocks[pos.x, pos.y].status == turn) continue;
+                if (othelloBlocks[pos.x, pos.y].status != (1 - (turn - 1)) + 1) continue;
 
                 //àÍÇ¬à»è„îÚÇŒÇµîªíË
                 while (true)
@@ -135,7 +135,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
                 pos.x = x + i;
                 pos.y = y + j;
                 if (!CheckPosition(pos.x, pos.y)) continue;
-                if (othelloBlocks[pos.x, pos.y].status == turn) continue;
+                if (othelloBlocks[pos.x, pos.y].status != (1 - (turn - 1)) + 1) continue;
 
                 //àÍÇ¬à»è„îÚÇŒÇµîªíË
                 while (true)

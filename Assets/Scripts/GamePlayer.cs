@@ -12,7 +12,6 @@ public class GamePlayer : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             PhotonNetwork.NickName = "Master";
-            PhotonNetwork.Instantiate("OthelloManager", new Vector3(0, 0, 0), Quaternion.identity, 0);
         }
         else
         {
