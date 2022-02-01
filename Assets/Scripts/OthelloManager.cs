@@ -5,10 +5,7 @@ using Photon.Pun;
 
 public class OthelloManager : MonoBehaviourPunCallbacks
 {
-    public byte x;
-    public byte y;
-    private byte pos; //オセロマスの座標を示す値
-    private byte turn = 0;//0:マスタークライアントのターン,1:ローカルクライアントのターン
+    private byte turn = 1;//1:マスタークライアントのターン,2:ローカルクライアントのターン
 
     public GameObject parentOthllo;
 
@@ -24,42 +21,8 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     {
         parentOthllo = GameObject.Find("CanvasGame");
         CreateOthlloMass();
-        CountBomb();
         init();
         AllCheckPut();
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = new Ray();
-            RaycastHit2D hit = new RaycastHit2D();
-            ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            hit = Physics2D.Raycast((Vector2)ray.origin, (Vector2)ray.direction);
-
-            if (hit.collider.CompareTag("Othello"))
-            {
-                pos = hit.collider.gameObject.GetComponent<Othello>().OnUserPush();
-
-                if (pos != 100)
-                {
-                    x = (byte)(pos / 8);
-                    y = (byte)(pos % 8);
-                    if (PhotonNetwork.NickName == "Master" && turn == 0)
-                    {
-                        photonView.RPC(nameof(PutStone), RpcTarget.AllViaServer, x, y);
-                    }
-                    else if (PhotonNetwork.NickName == "Local" && turn == 1)
-                    {
-                        photonView.RPC(nameof(PutStone), RpcTarget.AllViaServer, x, y);
-                    }
-                }
-            }
-            
-        }
     }
     
     //オセロマス生成
@@ -69,7 +32,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             for (byte j = 0; j < 8; j++)
             {
-                Vector3 position = new Vector3((float)(-3.5 + i), (float)(-3.5 + j), 0);
+                Vector3 position = new Vector3((float)(-3.5 + i), (float)(3.5 - j), 0);
                 GameObject obj = (GameObject)Instantiate(Resources.Load("Othello"), position, Quaternion.identity);
                 othelloBlocks[i, j] = obj.GetComponent<Othello>();
                 othelloBlocks[i, j].id = (byte)(i + j * 8);
@@ -115,19 +78,19 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             for (byte j = 0; j < 8; j++)
             {
-                CheckPut(i, j, false);
+                othelloBlocks[i, j].isPut = CheckPut(i, j);
             }
         }
     }
 
-    //x,yにおいて置けるかどうかオセロマス更新、第3引数：true→ひっくり返す、false→判定だけ
-    private void CheckPut(byte x, byte y, bool put)
+    //x,yにおいて置けるかどうか判定
+    private bool CheckPut(byte x, byte y)
     {
         bool result = false;
         Vector2Int pos = new Vector2Int(0, 0);
 
         //空きマスでなければfalse
-        if (othelloBlocks[x, y].status != 0) othelloBlocks[x, y].isPut = result;
+        if (othelloBlocks[x, y].status != 0) return result;
 
         //八方向判定
         for (int i = -1; i <= 1; i++)
@@ -139,7 +102,40 @@ public class OthelloManager : MonoBehaviourPunCallbacks
                 pos.x = x + i;
                 pos.y = y + j;
                 if (!CheckPosition(pos.x, pos.y)) continue;
-                if (othelloBlocks[pos.x, pos.y].status != (byte)(1 - turn)) continue;
+                if (othelloBlocks[pos.x, pos.y].status == turn) continue;
+
+                //一つ以上飛ばし判定
+                while (true)
+                {
+                    pos.x += i;
+                    pos.y += j;
+                    if (!CheckPosition(pos.x, pos.y)) break;
+                    if (othelloBlocks[pos.x, pos.y].status == NONE) break;
+                    if (othelloBlocks[pos.x, pos.y].status == turn) result = true;
+                }
+            }
+        }
+        return result;
+    }
+
+    //ひっくり返す
+    private void ReversePut(byte x, byte y)
+    {
+        Vector2Int pos = new Vector2Int(0, 0);
+
+        ChangeStone(x, y, turn);
+
+        //八方向判定
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                //隣判定
+                if (i == 0 && j == 0) continue;
+                pos.x = x + i;
+                pos.y = y + j;
+                if (!CheckPosition(pos.x, pos.y)) continue;
+                if (othelloBlocks[pos.x, pos.y].status == turn) continue;
 
                 //一つ以上飛ばし判定
                 while (true)
@@ -150,33 +146,20 @@ public class OthelloManager : MonoBehaviourPunCallbacks
                     if (othelloBlocks[pos.x, pos.y].status == NONE) break;
                     if (othelloBlocks[pos.x, pos.y].status == turn)
                     {
-                        if (put)
+                        Vector2Int reversePos = new Vector2Int(x, y);
+                        while (true)
                         {
-                            if (othelloBlocks[x, y].isBomb)
-                            {
-                                ChangeStone(x, y, BOMB);
-                            }
-                            else
-                            {
-                                Vector2Int reversePos = new Vector2Int(x, y);
-                                ChangeStone(x, y, turn);
-                                while (true)
-                                {
-                                    reversePos.x += i;
-                                    reversePos.y += j;
-                                    if (reversePos == pos) break;
-                                    ChangeStone(reversePos.x, reversePos.y, turn);
-                                }
-                            }
+                            reversePos.x += i;
+                            reversePos.y += j;
+                            if (reversePos == pos) break;
+                            ChangeStone(reversePos.x, reversePos.y, turn);
                         }
-                        else result = true;
                     }
                 }
             }
         }
-        othelloBlocks[x, y].isPut = result;
     }
-    
+
     //オセロ盤の範囲内にあるかチェック
     private bool CheckPosition(int x, int y)
     {
@@ -187,7 +170,16 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     //第1,第2引数の場所のstatusを第3引数に変更
     private void ChangeStone(int x, int y, byte turn)
     {
-        othelloBlocks[x, y].status = (byte)(turn + 1);
+        othelloBlocks[x, y].status = turn;
+    }
+
+    //Playerからオセロマスを押された時の判定
+    public void PushOthello(string name, byte x, byte y)
+    {
+        if ((name == "Master" && turn == BLACK) || (name == "Local" && turn == WHITE))
+        {
+            photonView.RPC(nameof(PutStone), RpcTarget.All, x, y);
+        }
     }
 
     //ゲームサーバー内にいる人に対して実行
@@ -197,12 +189,13 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         if (othelloBlocks[x, y].isBomb) othelloBlocks[x, y].status = BOMB;
         else
         {
-            CheckPut(x, y, true);
-            AllCheckPut();
+            ReversePut(x, y);
         }
 
         //送信者がマスタークライアント→ローカルクライアントのターン
-        if (info.Sender.NickName == "Master") turn = 1;
-        else turn = 0;
+        if (info.Sender.NickName == "Master") turn = 2;
+        else turn = 1;
+
+        AllCheckPut();
     }
 }

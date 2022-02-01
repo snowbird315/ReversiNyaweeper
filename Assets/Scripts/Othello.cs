@@ -7,7 +7,7 @@ using TMPro;
 public class Othello : MonoBehaviour
 {
     public byte id; //pos/8 = 行数,pos%8 = 列数
-    public byte status = 0; //0:なし,1:白マス,2:黒マス,3:爆弾マス
+    public byte status = 0; //0:なし,1:黒マス,2:白マス,3:爆弾マス
     public byte number = 0; //1~8:周囲の爆弾個数
     public bool isPut = false; //false:置けない,true:置ける
     public bool isBomb = false; //false:普通のマス,true:爆弾があるマス

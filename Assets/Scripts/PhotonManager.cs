@@ -32,7 +32,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         PhotonNetwork.Instantiate("GamePlayer", new Vector3(0, 0, 0), Quaternion.identity, 0);
-        Instantiate(Resources.Load("OthelloManager"));
     }
 
     // 他プレイヤーがルームへ参加した時に呼ばれるコールバック
