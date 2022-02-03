@@ -6,6 +6,7 @@ using Photon.Pun;
 public class GamePlayer : MonoBehaviourPunCallbacks
 {
     GameObject othelloManager;
+    byte phase = 2;
 
     private void Start()
     {
@@ -24,6 +25,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks
         }
 
         othelloManager = GameObject.Find("OthelloManager(Clone)");
+        
     }
 
     private void Update()
@@ -38,19 +40,30 @@ public class GamePlayer : MonoBehaviourPunCallbacks
 
             if (hit.collider.CompareTag("Othello"))
             {
-                byte pos = hit.collider.gameObject.GetComponent<Othello>().OnUserPush();
-
-                if (pos != 100)
+                if (phase == 2)
                 {
+                    byte pos = hit.collider.gameObject.GetComponent<Othello>().GetId();
+
                     byte x, y;
                     x = (byte)(pos % 8);
                     y = (byte)(pos / 8);
 
-                    //オセロマスを押したら座標とマスタークライアントかどうかを引数に与える
-                    othelloManager.GetComponent<OthelloManager>().PushOthello(PhotonNetwork.NickName, x, y);
+                    othelloManager.GetComponent<OthelloManager>().PutBomb(x, y);
+                }
+                else if (phase == 3)
+                {
+                    byte pos = hit.collider.gameObject.GetComponent<Othello>().OnUserPush();
+
+                    if (pos != 100)
+                    {
+                        byte x, y;
+                        x = (byte)(pos % 8);
+                        y = (byte)(pos / 8);
+
+                        othelloManager.GetComponent<OthelloManager>().PushOthello(PhotonNetwork.NickName, x, y);
+                    }
                 }
             }
-
         }
     }
 }

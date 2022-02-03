@@ -5,9 +5,7 @@ using Photon.Pun;
 
 public class OthelloManager : MonoBehaviourPunCallbacks
 {
-    private byte turn = 1;//1:マスタークライアントのターン,2:ローカルクライアントのターン
-
-    public GameObject parentOthllo;
+    private byte turn = 1; //1:マスタークライアントのターン,2:ローカルクライアントのターン
 
     private const byte NONE = 0;
     private const byte BLACK = 1;
@@ -19,11 +17,12 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     // Start is called before the first frame update
     void Start()
     {
-        parentOthllo = GameObject.Find("CanvasGame");
         CreateOthlloMass();
         init();
         AllCheckPut();
     }
+
+    
     
     //オセロマス生成
     private void CreateOthlloMass()
@@ -32,7 +31,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             for (byte j = 0; j < 8; j++)
             {
-                Vector3 position = new Vector3((float)(-3.5 + i), (float)(3.5 - j), 0);
+                Vector3 position = new Vector3((float)(-3.5 + i), (float)(2.0 - j), 0);
                 GameObject obj = (GameObject)Instantiate(Resources.Load("Othello"), position, Quaternion.identity);
                 othelloBlocks[i, j] = obj.GetComponent<Othello>();
                 othelloBlocks[i, j].id = (byte)(i + j * 8);
@@ -47,12 +46,21 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             for(byte j = 0; j < 8; j++)
             {
+                othelloBlocks[i, j].number = 0;
+            }
+        }
+
+        for(byte i = 0; i < 8; i++)
+        {
+            for(byte j = 0; j < 8; j++)
+            {
                 if (othelloBlocks[i, j].isBomb)
                 {
                     for(int k = -1; k <= 1; k++)
                     {
                         for(int l = -1; l <= 1; l++)
                         {
+                            if (!CheckPosition(i + k, j + l)) continue;
                             if (k == 0 && l == 0) continue;
                             othelloBlocks[i + k, j + l].number += 1;
                         }
@@ -72,15 +80,18 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     }
 
     //全ての場所において置けるかどうかオセロマス更新
-    private void AllCheckPut()
+    private bool AllCheckPut()
     {
+        bool result = false;
         for (byte i = 0; i < 8; i++)
         {
             for (byte j = 0; j < 8; j++)
             {
                 othelloBlocks[i, j].isPut = CheckPut(i, j);
+                if (othelloBlocks[i, j].isPut) result = true;
             }
         }
+        return result;
     }
 
     //x,yにおいて置けるかどうか判定
@@ -173,7 +184,44 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         othelloBlocks[x, y].status = turn;
     }
 
-    //Playerからオセロマスを押された時の判定
+    //終了処理
+    private void EndGame()
+    {
+        
+    }
+    
+
+    //爆弾設置フェーズ中：Playerからオセロマスを押された時
+    public void PutBomb(byte x, byte y)
+    {
+        if (othelloBlocks[x, y].isBomb)
+        {
+            for (int k = -1; k <= 1; k++)
+            {
+                for (int l = -1; l <= 1; l++)
+                {
+                    if (!CheckPosition(x + k, y + l)) continue;
+                    if (k == 0 && l == 0) continue;
+                    othelloBlocks[x + k, y + l].number -= 1;
+                }
+            }
+        }
+        else
+        {
+            for (int k = -1; k <= 1; k++)
+            {
+                for (int l = -1; l <= 1; l++)
+                {
+                    if (!CheckPosition(x + k, y + l)) continue;
+                    if (k == 0 && l == 0) continue;
+                    othelloBlocks[x + k, y + l].number += 1;
+                }
+            }
+        }
+        othelloBlocks[x, y].isBomb = !(othelloBlocks[x, y].isBomb);
+    }
+
+    //ゲームフェーズ中：Playerからオセロマスを押された時の判定
     public void PushOthello(string name, byte x, byte y)
     {
         if ((name == "Master" && turn == BLACK) || (name == "Local" && turn == WHITE))
@@ -196,6 +244,12 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         if (info.Sender.NickName == "Master") turn = 2;
         else turn = 1;
 
-        AllCheckPut();
+        if (!AllCheckPut())
+        {
+            if (info.Sender.NickName == "Master") turn = 1;
+            else turn = 2;
+
+            if (!AllCheckPut()) EndGame();
+        }
     }
 }

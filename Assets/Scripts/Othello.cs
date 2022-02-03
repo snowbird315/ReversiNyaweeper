@@ -48,6 +48,8 @@ public class Othello : MonoBehaviour
         if (number == 6) textMeshPro.color = new Color(0, 0.7f, 1f, 1f);
         if (number == 7) textMeshPro.color = Color.black;
         if (number == 8) textMeshPro.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+
+        if (isPut) sprite.color = Color.yellow;
     }
 
     public byte OnUserPush()
@@ -60,5 +62,10 @@ public class Othello : MonoBehaviour
         {
             return (byte)100;
         }
+    }
+
+    public byte GetId()
+    {
+        return id;
     }
 }
