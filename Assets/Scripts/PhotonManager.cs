@@ -37,7 +37,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     //ルームの作成が成功した時に呼ばれるコールバック
     public override void OnCreatedRoom()
     {
-        PhotonNetwork.Instantiate("OthelloManager", new Vector3(0, 0, 0), Quaternion.identity, 0);
+        
     }
 
     // 他プレイヤーがルームへ参加した時に呼ばれるコールバック

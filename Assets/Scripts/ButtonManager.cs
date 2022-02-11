@@ -5,18 +5,12 @@ using UnityEngine.SceneManagement;
 
 public class ButtonManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    public void PushResult()
+    public void GoToTitle()
     {
         SceneManager.LoadScene("TitleScene");
     }
 
-    public void PushRetry()
+    public void GoToGame()
     {
         SceneManager.LoadScene("GameScene");
     }

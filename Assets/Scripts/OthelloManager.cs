@@ -12,20 +12,19 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     private const byte WHITE = 2;
     private const byte BOMB = 3;
 
-    private Othello[,] othelloBlocks = new Othello[8,8];
+    private Othello[,] othelloBlocks = new Othello[8, 8];
 
     // Start is called before the first frame update
     void Start()
     {
-        CreateOthlloMass();
+        CreateOthlelloMass();
         init();
-        AllCheckPut();
     }
 
     
     
     //オセロマス生成
-    private void CreateOthlloMass()
+    private void CreateOthlelloMass()
     {
         for (byte i = 0; i < 8; i++)
         {
@@ -33,6 +32,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
             {
                 Vector3 position = new Vector3((float)(-3.5 + i), (float)(2.0 - j), 0);
                 GameObject obj = (GameObject)Instantiate(Resources.Load("Othello"), position, Quaternion.identity);
+                obj.name = "Othello" + (i + j * 8).ToString();
                 othelloBlocks[i, j] = obj.GetComponent<Othello>();
                 othelloBlocks[i, j].id = (byte)(i + j * 8);
             }
@@ -77,6 +77,19 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         othelloBlocks[4, 4].status = WHITE;
         othelloBlocks[3, 4].status = BLACK;
         othelloBlocks[4, 3].status = BLACK;
+        AllCheckPut();
+    }
+
+    //
+    public void initBomb()
+    {
+        for (byte i = 0; i < 8; i++)
+        {
+            for (byte j = 0; j < 8; j++)
+            {
+                othelloBlocks[i, j].bomb = false;
+            }
+        }
     }
 
     //全ての場所において置けるかどうかオセロマス更新
@@ -134,7 +147,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     {
         Vector2Int pos = new Vector2Int(0, 0);
 
-        ChangeStone(x, y, turn);
+        ChangeStone(x, y);
 
         //八方向判定
         for (int i = -1; i <= 1; i++)
@@ -163,7 +176,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
                             reversePos.x += i;
                             reversePos.y += j;
                             if (reversePos == pos) break;
-                            ChangeStone(reversePos.x, reversePos.y, turn);
+                            ChangeStone(reversePos.x, reversePos.y);
                         }
                     }
                 }
@@ -179,7 +192,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     }
 
     //第1,第2引数の場所のstatusを第3引数に変更
-    private void ChangeStone(int x, int y, byte turn)
+    private void ChangeStone(int x, int y)
     {
         othelloBlocks[x, y].status = turn;
     }
@@ -192,33 +205,34 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     
 
     //爆弾設置フェーズ中：Playerからオセロマスを押された時
-    public void PutBomb(byte x, byte y)
+    public byte PutBomb(byte x, byte y, byte count)
     {
-        if (othelloBlocks[x, y].isBomb)
+        byte result = 0; //0:変化なし,1:爆弾追加,2:爆弾削除
+
+        if (othelloBlocks[x, y].bomb)
         {
-            for (int k = -1; k <= 1; k++)
-            {
-                for (int l = -1; l <= 1; l++)
-                {
-                    if (!CheckPosition(x + k, y + l)) continue;
-                    if (k == 0 && l == 0) continue;
-                    othelloBlocks[x + k, y + l].number -= 1;
-                }
-            }
+            othelloBlocks[x, y].bomb = false;
+            result = 2;
         }
-        else
+        else if(count > 0)
         {
-            for (int k = -1; k <= 1; k++)
-            {
-                for (int l = -1; l <= 1; l++)
-                {
-                    if (!CheckPosition(x + k, y + l)) continue;
-                    if (k == 0 && l == 0) continue;
-                    othelloBlocks[x + k, y + l].number += 1;
-                }
-            }
+            othelloBlocks[x, y].bomb = true;
+            result = 1;
         }
-        othelloBlocks[x, y].isBomb = !(othelloBlocks[x, y].isBomb);
+        return result;
+    }
+
+    //
+    public void Bomb(List<byte> bomb)
+    {
+        for(byte i = 0; i < 5; i++)
+        {
+            byte x, y,id = bomb[i];
+            x = (byte)(id % 8);
+            y = (byte)(id / 8);
+            othelloBlocks[x, y].isBomb = true;
+        }
+        CountBomb();
     }
 
     //ゲームフェーズ中：Playerからオセロマスを押された時の判定

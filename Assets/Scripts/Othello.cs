@@ -11,6 +11,7 @@ public class Othello : MonoBehaviour
     public byte number = 0; //1~8:周囲の爆弾個数
     public bool isPut = false; //false:置けない,true:置ける
     public bool isBomb = false; //false:普通のマス,true:爆弾があるマス
+    public bool bomb = false;
 
     private const byte NONE = 0;
     private const byte BLACK = 1;
@@ -50,6 +51,8 @@ public class Othello : MonoBehaviour
         if (number == 8) textMeshPro.color = new Color(0.5f, 0.5f, 0.5f, 1f);
 
         if (isPut) sprite.color = Color.yellow;
+
+        if (bomb) sprite.color = Color.red;
     }
 
     public byte OnUserPush()
