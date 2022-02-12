@@ -62,7 +62,10 @@ public class GamePlayer : MonoBehaviourPunCallbacks
                     {
 
                     }
-                    photonView.RPC(nameof(SendBomb), RpcTarget.All, bomb);
+                    for (byte i = 0; i < 5; i++)
+                    {
+                        othelloManager.GetComponent<OthelloManager>().Bomb(bomb[i]);
+                    }
                     othelloManager.GetComponent<OthelloManager>().initBomb();
 
 
@@ -118,12 +121,6 @@ public class GamePlayer : MonoBehaviourPunCallbacks
                 }
             }
         }
-    }
-
-    [PunRPC]
-    private void SendBomb(List<byte> bomb)
-    {
-        othelloManager.GetComponent<OthelloManager>().Bomb(bomb);
     }
 
     public string GetNickName()

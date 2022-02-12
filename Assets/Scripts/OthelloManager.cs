@@ -223,16 +223,9 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     }
 
     //
-    public void Bomb(List<byte> bomb)
+    public void Bomb(byte id)
     {
-        for(byte i = 0; i < 5; i++)
-        {
-            byte x, y,id = bomb[i];
-            x = (byte)(id % 8);
-            y = (byte)(id / 8);
-            othelloBlocks[x, y].isBomb = true;
-        }
-        CountBomb();
+        photonView.RPC(nameof(ShereBomb), RpcTarget.All, id);
     }
 
     //ゲームフェーズ中：Playerからオセロマスを押された時の判定
@@ -242,6 +235,17 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             photonView.RPC(nameof(PutStone), RpcTarget.All, x, y);
         }
+    }
+
+    //
+    [PunRPC]
+    private void ShereBomb(byte id)
+    {
+        byte x, y;
+        x = (byte)(id % 8);
+        y = (byte)(id / 8);
+        othelloBlocks[x, y].isBomb = true;
+        CountBomb();
     }
 
     //ゲームサーバー内にいる人に対して実行

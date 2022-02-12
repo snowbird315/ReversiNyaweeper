@@ -41,6 +41,7 @@ MonoBehaviour:
   - PutStone
   - Phase0to1to2
   - SendBomb
+  - ShereBomb
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
