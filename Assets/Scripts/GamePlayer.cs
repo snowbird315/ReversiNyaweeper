@@ -8,7 +8,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks
     private GameObject uiManager;
     private GameObject othelloManager;
     private byte phase = 0; //0:マッチング中,1:対戦相手紹介フェーズ,2:爆弾設置フェーズ,3:ゲームフェーズ,4:リザルトフェーズ
-    private byte bombCount = 5;
+    private byte bombCount = 3;
     private List<byte> bomb = new List<byte>();
     private int currentTime;
 
@@ -58,11 +58,17 @@ public class GamePlayer : MonoBehaviourPunCallbacks
                 {
                     phase = 3;
                     uiManager.GetComponent<UIManager>().Phase2to3();
-                    for (byte i = 0; i < (5 - bomb.Count); i++)
+                    for (byte i = 0; i < (bombCount - bomb.Count); i++)
                     {
-
+                        byte id;
+                        Random.InitState(System.DateTime.Now.Millisecond);
+                        do
+                        {
+                            id = (byte)Random.Range(0, 64);
+                        } while (id == 27 || id == 28 || id == 35 || id == 36);
+                        bomb.Add(id);
                     }
-                    for (byte i = 0; i < 5; i++)
+                    for (byte i = 0; i < bombCount; i++)
                     {
                         othelloManager.GetComponent<OthelloManager>().Bomb(bomb[i]);
                     }

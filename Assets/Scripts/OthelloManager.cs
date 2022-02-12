@@ -30,7 +30,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             for (byte j = 0; j < 8; j++)
             {
-                Vector3 position = new Vector3((float)(-3.5 + i), (float)(2.0 - j), 0);
+                Vector3 position = new Vector3((float)(-3.5 + i), (float)(1.0 - j), 0);
                 GameObject obj = (GameObject)Instantiate(Resources.Load("Othello"), position, Quaternion.identity);
                 obj.name = "Othello" + (i + j * 8).ToString();
                 othelloBlocks[i, j] = obj.GetComponent<Othello>();
