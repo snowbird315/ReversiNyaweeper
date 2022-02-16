@@ -87,7 +87,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         {
             for (byte j = 0; j < 8; j++)
             {
-                othelloBlocks[i, j].bomb = false;
+                othelloBlocks[i, j].isBomb = false;
             }
         }
     }
@@ -209,14 +209,14 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     {
         byte result = 0; //0:•Ï‰»‚È‚µ,1:”š’e’Ç‰Á,2:”š’eíœ
 
-        if (othelloBlocks[x, y].bomb)
+        if (othelloBlocks[x, y].isBomb)
         {
-            othelloBlocks[x, y].bomb = false;
+            othelloBlocks[x, y].isBomb = false;
             result = 2;
         }
         else if(count > 0)
         {
-            othelloBlocks[x, y].bomb = true;
+            othelloBlocks[x, y].isBomb = true;
             result = 1;
         }
         return result;

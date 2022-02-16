@@ -102,11 +102,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edbcaeaddd9947541be1aeee84815ee7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  img_black: {fileID: 21300000, guid: 50b73463e27c83b409bf136e362e5cee, type: 3}
+  img_white: {fileID: 21300000, guid: 72bef2d987450504c84ce3bf94fccec1, type: 3}
+  img_bomb: {fileID: 21300000, guid: ea6151646d54a2c499b5a48d1d070cb4, type: 3}
+  img_put: {fileID: 21300000, guid: e7cbb773f4f07594784d300267d4acb3, type: 3}
   id: 0
   status: 0
   number: 0
   isPut: 0
   isBomb: 0
+  bomb: 0
 --- !u!61 &5936564067815727788
 BoxCollider2D:
   m_ObjectHideFlags: 0
