@@ -22,6 +22,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     //ゲームサーバーへの接続が失敗した時に呼ばれるコールバック
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
+        //新しいルームを作成、最大人数を2人に
         var roomOptions = new RoomOptions();
         roomOptions.MaxPlayers = 2;
 

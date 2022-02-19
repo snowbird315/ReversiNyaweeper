@@ -8,15 +8,15 @@ public class GamePlayer : MonoBehaviourPunCallbacks
     private GameObject uiManager;
     private GameObject othelloManager;
     private byte phase = 0; //0:マッチング中,1:対戦相手紹介フェーズ,2:爆弾設置フェーズ,3:ゲームフェーズ,4:リザルトフェーズ
-    private byte bombCount = 3;
-    private List<byte> bomb = new List<byte>();
-    private int currentTime;
+    private byte bombCount = 3; //置ける爆弾の個数
+    private List<byte> bomb = new List<byte>(); //爆弾を置いた場所を保持
+    private int currentTime; //爆弾設置時間のための変数
 
     private void Start()
     {
         if (photonView.IsMine)
         {
-            uiManager = GameObject.Find("UIManager");
+            uiManager = GameObject.Find("UIGameManager");
 
             if (PhotonNetwork.IsMasterClient)
             {
@@ -37,28 +37,47 @@ public class GamePlayer : MonoBehaviourPunCallbacks
         {
             if (phase == 0)
             {
+                //人数が揃ったら次フェーズに
                 if (PhotonNetwork.CurrentRoom.PlayerCount == PhotonNetwork.CurrentRoom.MaxPlayers)
                 {
                     phase = 1;
-                    uiManager.GetComponent<UIManager>().Phase0to1();
+                    uiManager.GetComponent<UIGameManager>().Phase0to1();
                 }
             }
 
             if (phase == 1)
             {
-                uiManager.GetComponent<UIManager>().Phase1to2();
+                //ここに相手の情報を受け取る内容を入れる
+
+
+                uiManager.GetComponent<UIGameManager>().ChangeName();
+                uiManager.GetComponent<UIGameManager>().ChangeRate();
+                //ここに対戦相手紹介のTweenを入れる
+
+
+                //Twewnが終わったら次フェーズに
+                uiManager.GetComponent<UIGameManager>().Phase1to2();
                 othelloManager = GameObject.Find("OthelloManager(Clone)");
+                uiManager.GetComponent<UIGameManager>().ChangeCountText(othelloManager.GetComponent<OthelloManager>().CountOthelloMass());
                 currentTime = PhotonNetwork.ServerTimestamp;
                 phase = 2;
             }
 
             if (phase == 2)
             {
+                float time = (float)(10 + (currentTime - PhotonNetwork.ServerTimestamp) / 1000f);
+                uiManager.GetComponent<UIGameManager>().ChangeTimeSlider(time);
+                uiManager.GetComponent<UIGameManager>().ChangeTimeText(time);
+
+                //爆弾設置フェーズに入って10秒経ったら、爆弾送受信のち次フェーズに
                 if (unchecked(PhotonNetwork.ServerTimestamp - currentTime) / 1000f > 10)
                 {
+                    //ここにゲームスタートのTweenを入れる
+
+
                     phase = 3;
-                    uiManager.GetComponent<UIManager>().Phase2to3();
-                    for (byte i = 0; i < (bombCount - bomb.Count); i++)
+                    uiManager.GetComponent<UIGameManager>().Phase2to3();
+                    for (byte i = 0; i < bombCount; i++)
                     {
                         byte id;
                         Random.InitState(System.DateTime.Now.Millisecond);
@@ -68,13 +87,12 @@ public class GamePlayer : MonoBehaviourPunCallbacks
                         } while (id == 27 || id == 28 || id == 35 || id == 36);
                         bomb.Add(id);
                     }
-                    for (byte i = 0; i < bombCount; i++)
+
+                    othelloManager.GetComponent<OthelloManager>().initOthelloMath();
+                    for (byte i = 0; i < 3; i++)
                     {
                         othelloManager.GetComponent<OthelloManager>().Bomb(bomb[i]);
                     }
-                    othelloManager.GetComponent<OthelloManager>().initBomb();
-
-
                 }
             }
 
@@ -88,6 +106,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks
 
                 if (hit.collider.CompareTag("Othello"))
                 {
+                    //爆弾設置
                     if (phase == 2)
                     {
                         byte pos = hit.collider.gameObject.GetComponent<Othello>().GetId();
@@ -98,6 +117,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks
 
                         if (!(pos == 27 || pos == 28 || pos == 35 || pos == 36))
                         {
+                            //result：0→何も起きなかった、1→爆弾設置、2→爆弾削除
                             result = othelloManager.GetComponent<OthelloManager>().PutBomb(x, y, bombCount);
                             if (result == 1)
                             {
@@ -111,6 +131,7 @@ public class GamePlayer : MonoBehaviourPunCallbacks
                             }
                         }
                     }
+                    //オセロ設置
                     else if (phase == 3)
                     {
                         byte pos = hit.collider.gameObject.GetComponent<Othello>().OnUserPush();
@@ -118,10 +139,15 @@ public class GamePlayer : MonoBehaviourPunCallbacks
                         if (pos != 100)
                         {
                             byte x, y;
+                            byte[] count = new byte[2];
                             x = (byte)(pos % 8);
                             y = (byte)(pos / 8);
 
-                            othelloManager.GetComponent<OthelloManager>().PushOthello(PhotonNetwork.NickName, x, y);
+                            if(othelloManager.GetComponent<OthelloManager>().PushOthello(PhotonNetwork.NickName, x, y))
+                            {
+                                count = othelloManager.GetComponent<OthelloManager>().CountOthelloMass();
+                                photonView.RPC(nameof(ChangeTextCount), RpcTarget.All, count);
+                            }
                         }
                     }
                 }
@@ -129,8 +155,9 @@ public class GamePlayer : MonoBehaviourPunCallbacks
         }
     }
 
-    public string GetNickName()
+    [PunRPC]
+    private void ChangeTextCount(byte[] count)
     {
-        return PhotonNetwork.NickName;
+        uiManager.GetComponent<UIGameManager>().ChangeCountText(count);
     }
 }

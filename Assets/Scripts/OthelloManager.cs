@@ -12,7 +12,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     private const byte WHITE = 2;
     private const byte BOMB = 3;
 
-    private Othello[,] othelloBlocks = new Othello[8, 8];
+    private Othello[,] othelloBlocks = new Othello[8, 8]; //オセロマスを保持
 
     // Start is called before the first frame update
     void Start()
@@ -20,9 +20,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         CreateOthlelloMass();
         init();
     }
-
-    
-    
+ 
     //オセロマス生成
     private void CreateOthlelloMass()
     {
@@ -37,6 +35,23 @@ public class OthelloManager : MonoBehaviourPunCallbacks
                 othelloBlocks[i, j].id = (byte)(i + j * 8);
             }
         }
+    }
+
+    //オセロマスカウント
+    public byte[] CountOthelloMass()
+    {
+        byte[] result = new byte[] { 0, 0 };
+
+        for (byte i = 0; i < 8; i++)
+        {
+            for (byte j = 0; j < 8; j++)
+            {
+                if (othelloBlocks[i, j].status == BLACK) result[0]++;
+                else if (othelloBlocks[i, j].status == WHITE) result[1]++;
+            }
+        }
+
+        return result;
     }
 
     //オセロマス周囲の爆弾個数カウント
@@ -80,16 +95,17 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         AllCheckPut();
     }
 
-    //
-    public void initBomb()
+    //全ての場所においてボムの保持を削除(ステータスは変更なし)
+    public void initOthelloMath()
     {
         for (byte i = 0; i < 8; i++)
         {
             for (byte j = 0; j < 8; j++)
             {
-                othelloBlocks[i, j].isBomb = false;
+                othelloBlocks[i, j].status = NONE;
             }
         }
+        init();
     }
 
     //全ての場所において置けるかどうかオセロマス更新
@@ -209,35 +225,38 @@ public class OthelloManager : MonoBehaviourPunCallbacks
     {
         byte result = 0; //0:変化なし,1:爆弾追加,2:爆弾削除
 
-        if (othelloBlocks[x, y].isBomb)
+        if (othelloBlocks[x, y].status == BOMB)
         {
-            othelloBlocks[x, y].isBomb = false;
+            othelloBlocks[x, y].status = NONE;
             result = 2;
         }
         else if(count > 0)
         {
-            othelloBlocks[x, y].isBomb = true;
+            othelloBlocks[x, y].status = BOMB;
             result = 1;
         }
         return result;
     }
 
-    //
+    //ゲームサーバー内にいる人に対してidの示すオセロマスに爆弾を設置
     public void Bomb(byte id)
     {
         photonView.RPC(nameof(ShereBomb), RpcTarget.All, id);
     }
 
     //ゲームフェーズ中：Playerからオセロマスを押された時の判定
-    public void PushOthello(string name, byte x, byte y)
+    public bool PushOthello(string name, byte x, byte y)
     {
+        bool result = false;
         if ((name == "Master" && turn == BLACK) || (name == "Local" && turn == WHITE))
         {
             photonView.RPC(nameof(PutStone), RpcTarget.All, x, y);
+            result = true;
         }
+        return result;
     }
 
-    //
+    //ゲームサーバー内にいる人に対して爆弾設置実行
     [PunRPC]
     private void ShereBomb(byte id)
     {
@@ -248,7 +267,7 @@ public class OthelloManager : MonoBehaviourPunCallbacks
         CountBomb();
     }
 
-    //ゲームサーバー内にいる人に対して実行
+    //ゲームサーバー内にいる人に対してオセロマス設置実行
     [PunRPC]
     private void PutStone(byte x, byte y, PhotonMessageInfo info)
     {
